@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Scheduler Pro | Logical Forge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div class="auth-container" id="auth-zone">
+        <button class="btn-login" onclick="openModal('login-modal')">Log In</button>
+        <button class="btn-signup" onclick="openModal('signup-modal')">Sign Up</button>
+    </div>
+
+    <div class="header-block">
+        <h1 style="margin:0; color: var(--accent); letter-spacing: -1px;">
+            CPU Scheduler <span style="font-weight:300; color: white;">AI Simulator</span>
+        </h1>
+
+        <div class="controls-toolbar">
+            <div class="input-group">
+                <label>Scenario Mode</label>
+                <select id="scenario-select" class="scenario-select" onchange="loadScenario()">
+                    <option value="custom">Custom (Manual)</option>
+                    <option value="banking">🏦 Banking (Round Robin)</option>
+                    <option value="hospital">🏥 Hospital (Priority Emergency)</option>
+                    <option value="embedded">📟 Embedded (Shortest Job First)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Algorithm</label>
+                <select id="algo-select" onchange="toggleRR()">
+                    <option value="fcfs">FCFS</option>
+                    <option value="sjf">SJF</option>
+                    <option value="priority">Priority</option>
+                    <option value="rr">Round Robin</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="rr-ui" style="display:none">
+                <label>Quantum</label>
+                <input type="number" id="quantum" value="2" min="1" style="width:60px">
+            </div>
+        </div>
+
+        <div class="action-row">
+            <button class="btn-add" id="add-row">Add Process +</button>
+            <button class="btn-run" id="run-btn">Execute Simulation</button>
+            <button class="btn-history" id="history-tab-btn" onclick="toggleHistoryView()" style="display: none;">View History</button>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="glass">
+            <h3 style="margin-top:0">Process Queue</h3>
+            <div style="overflow-x: auto;">
+                <table id="p-table">
+                    <thead>
+                        <tr>
+                            <th>Process ID</th>
+                            <th>Arrival</th>
+                            <th>Burst</th>
+                            <th>Priority</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="p-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glass">
+            <div class="ai-box" id="ai-output">
+                <h3 style="margin:0; color: var(--ai-purp);">✨ AI Recommendation</h3>
+                <div id="ai-text-content">
+                    <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 8px;">
+                        Select a scenario or execute to see which algorithm is best for this workload.
+                    </p>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="compChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass">
+        <h3 style="margin-top:0">
+            Live Gantt Chart 
+            <small id="active-algo" style="color: var(--text-dim); font-weight: normal; margin-left:10px"></small>
+        </h3>
+        <div id="gantt-display" class="gantt-wrapper">
+            <p style="margin: auto; color: var(--text-dim); font-style: italic;">Ready for execution...</p>
+        </div>
+    </div>
+
+    <div id="history-section" class="glass" style="display: none;"></div>
+</div>
+
+<div id="login-modal" class="modal-overlay" onclick="closeModal(event, 'login-modal')">
+    <div class="modal-content glass">
+        <span class="modal-close" onclick="document.getElementById('login-modal').style.display='none'">&times;</span>
+        <h2 style="color: var(--accent); margin-top: 0;">Welcome Back</h2>
+        <form onsubmit="event.preventDefault();">
+            <div class="modal-input-group">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="name@example.com" required>
+            </div>
+            <div class="modal-input-group" style="margin-top: 15px;">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="button" id="loginBtn" class="btn-run" style="width: 100%; margin-top: 20px; padding: 12px;">Sign In</button>
+        </form>
+    </div>
+</div>
+
+<div id="signup-modal" class="modal-overlay" onclick="closeModal(event, 'signup-modal')">
+    <div class="modal-content glass">
+        <span class="modal-close" onclick="document.getElementById('signup-modal').style.display='none'">&times;</span>
+        <h2 style="color: var(--ai-purp); margin-top: 0;">Create Account</h2>
+        <form onsubmit="event.preventDefault();">
+            <div class="modal-input-group">
+                <label>Full Name</label>
+                <input type="text" id="fullname" placeholder="John Doe" required>
+            </div>
+            <div class="modal-input-group" style="margin-top: 15px;">
+                <label>Email Address</label>
+                <input type="email" id="signupEmail" placeholder="name@example.com" required>
+            </div>
+            <div class="modal-input-group" style="margin-top: 15px;">
+                <label>Password</label>
+                <input type="password" id="signupPassword" placeholder="••••••••" required>
+            </div>
+            <button type="button" id="signupBtn" class="btn-signup" style="width: 100%; margin-top: 20px; padding: 12px; font-weight: 600;">Register</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="script.js"></script>
+</body>
+</html>
