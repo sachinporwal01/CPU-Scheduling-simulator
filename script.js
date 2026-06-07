@@ -49,7 +49,7 @@ function openModal(id) {
 }
 function closeModal(event, id) {
     if (event.target.className === "modal-overlay") {
-        document.getElementById(id).style.none = "none";
+        document.getElementById(id).style.display = "none";
     }
 }
 
@@ -186,6 +186,60 @@ function solve(algo, q = 2) {
     return { avgWT: (totalWT / pool.length).toFixed(2), gantt: gantt };
 }
 
+// ====================== AI INSIGHTS RECOMMENDATION ENGINE ======================
+function updateAIRecommendation(selectedAlgo, results) {
+    const algos = ["FCFS", "SJF", "Priority", "RR"];
+    
+    // Find the mathematically best algorithm (lowest waiting time)
+    let bestIndex = 0;
+    let minWT = results[0];
+    for (let i = 1; i < results.length; i++) {
+        if (results[i] < minWT) {
+            minWT = results[i];
+            bestIndex = i;
+        }
+    }
+    const mathematicallyBest = algos[bestIndex];
+    
+    // Evaluate operational properties of current workload queue
+    const bursts = processes.map(p => p.burst);
+    const maxBurst = Math.max(...bursts);
+    const minBurst = Math.min(...bursts);
+    const hasHighVariance = (maxBurst - minBurst) > 8;
+    
+    let analysisText = "";
+    
+    if (mathematicallyBest === "SJF") {
+        analysisText = `📈 <strong>Shortest Job First (SJF)</strong> is mathematically optimal here, producing the lowest average waiting time of <strong>${minWT}ms</strong>. This batch structure benefits from prioritizing rapid micro-tasks, which completely prevents bottlenecking.`;
+    } else if (mathematicallyBest === "RR") {
+        analysisText = `🔄 <strong>Round Robin (RR)</strong> handles this workload mix exceptionally well. By enforcing time slicing, it prevents higher-burst processes from completely freezing out shorter background threads.`;
+    } else if (mathematicallyBest === "Priority") {
+        analysisText = `🛡️ <strong>Priority Scheduling</strong> is recommended if execution rules depend strictly on system importance hierarchies rather than scheduling cycle optimization thresholds.`;
+    } else {
+        analysisText = `⏳ <strong>FCFS execution</strong> is viable here because your queue contains steady, uniform execution bursts, limiting potential performance degradations.`;
+    }
+
+    // Generate diagnostic callout notes based on current selections
+    let critiqueText = "";
+    if (selectedAlgo === "fcfs" && hasHighVariance) {
+        critiqueText = `<p style="margin-top: 10px; color: #f43f5e; font-size: 0.8rem;">⚠️ <strong>Convoy Effect Detected:</strong> Using FCFS with long tasks mixed alongside short tasks forces quick processes to stall behind long ones, driving up your average waiting time.</p>`;
+    } else if (selectedAlgo.toUpperCase() === mathematicallyBest) {
+        critiqueText = `<p style="margin-top: 10px; color: #10b981; font-size: 0.8rem;">🎉 <strong>Optimal Configuration:</strong> Your selected algorithm matches the ideal analytical profile perfectly!</p>`;
+    } else {
+        critiqueText = `<p style="margin-top: 10px; color: #fbbf24; font-size: 0.8rem;">💡 <strong>Optimization Tip:</strong> Switching from ${selectedAlgo.toUpperCase()} to ${mathematicallyBest} could potentially drop average wait delays down to <strong>${minWT}ms</strong>.</p>`;
+    }
+
+    const aiContainer = document.getElementById("ai-text-content");
+    if (aiContainer) {
+        aiContainer.innerHTML = `
+            <p style="color: #f1f5f9; font-size: 0.88rem; line-height: 1.5; margin-top: 8px;">
+                ${analysisText}
+            </p>
+            ${critiqueText}
+        `;
+    }
+}
+
 // ====================== GANTT DISPLAY ANIMATION ======================
 async function animateGantt(ganttData) {
     const display = document.getElementById("gantt-display");
@@ -217,6 +271,9 @@ document.getElementById("run-btn").addEventListener("click", async () => {
 
     document.getElementById("active-algo").innerText = `[ Current: ${algo.toUpperCase()} ]`;
     const current = solve(algo, q);
+
+    // Call our newly added AI Engine to update the Recommendation box dynamically!
+    updateAIRecommendation(algo, results);
 
     await animateGantt(current.gantt);
 
@@ -387,33 +444,29 @@ async function registerUser(fullname, email, password) {
     });
 
     if (error) {
-        // Fallback for explicit error logs returned by custom server configurations
         if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("exists")) {
             alert("Account already exists with this email address.");
         } else {
             alert(error.message);
         }
     } else {
-        // THE FIX FOR FREE TIER PROJECTS:
-        // If an account already exists, Supabase returns an object where the identities array is completely empty.
         if (data.user && data.user.identities && data.user.identities.length === 0) {
             alert("Account already exists with this email address.");
             return;
         }
 
-        // If the identities array has data, it means it's a completely brand new unique user!
         if (data.user && data.session) {
             alert("Account Created Successfully!");
             document.getElementById("signup-modal").style.display = "none";
             currentUser = data.user;
             updateUI(fullname, email);
         } else {
-            // Fallback for email confirmation link workflows
             alert("Registration successful! Please check your email inbox for confirmation.");
             document.getElementById("signup-modal").style.display = "none";
         }
     }
 }
+
 async function loginUser(email, password) {
     const { data, error } = await client.auth.signInWithPassword({ email: email, password: password });
 
