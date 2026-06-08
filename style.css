@@ -80,10 +80,12 @@ button {
 .btn-run { background: var(--accent); color: #0f172a; }
 .btn-add { background: var(--border); color: white; border: 1px solid rgba(255,255,255,0.05); }
 .btn-history { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.btn-reset { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
 
 button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(56, 189, 248, 0.2); }
 .btn-add:hover { background: rgba(255, 255, 255, 0.15); }
 .btn-history:hover { background: rgba(56, 189, 248, 0.1); }
+.btn-reset:hover { background: rgba(239, 68, 68, 0.1); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.15); }
 button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
 .glass {
@@ -139,4 +141,8 @@ td input[type="number"] { width: 65px; }
 @media (max-width: 992px) {
     .main-grid { grid-template-columns: 1fr; }
     .header-block { padding-right: 0; margin-top: 60px; }
+}
+/* Custom Center Formatting Utilities */
+.text-center {
+    text-align: center;
 }

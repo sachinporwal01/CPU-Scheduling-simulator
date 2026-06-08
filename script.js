@@ -43,6 +43,37 @@ const scenarios = {
     }
 };
 
+// ====================== CUSTOM CENTERED POPUP ENGINE ======================
+function showAlertPopup(message, isSuccess = false) {
+    const modal = document.getElementById("custom-alert-modal");
+    const iconZone = document.getElementById("alert-icon-zone");
+    const titleZone = document.getElementById("alert-title-zone");
+    const messageZone = document.getElementById("alert-message-zone");
+
+    if (!modal || !messageZone) return;
+
+    messageZone.innerHTML = message;
+    
+    if (isSuccess) {
+        iconZone.innerText = "🎉";
+        titleZone.innerText = "Success";
+        titleZone.style.color = "#10b981";
+    } else {
+        iconZone.innerText = "⚠️";
+        titleZone.innerText = "Access Restricted";
+        titleZone.style.color = "#f43f5e";
+    }
+
+    modal.style.display = "flex";
+}
+
+function closeCustomAlert(event) {
+    if (event.target.id === "custom-alert-modal") {
+        document.getElementById("custom-alert-modal").style.display = "none";
+    }
+}
+window.closeCustomAlert = closeCustomAlert;
+
 // ====================== WINDOW CONTROLS MODAL ======================
 function openModal(id) {
     document.getElementById(id).style.display = "flex";
@@ -55,8 +86,16 @@ function closeModal(event, id) {
 
 // ====================== SCENARIO CONTROLS ======================
 function loadScenario() {
-    const val = document.getElementById("scenario-select").value;
+    const selector = document.getElementById("scenario-select");
+    const val = selector.value;
     if (val === "custom") return;
+
+    // AUTH GATEWAY: Blocks guest profiles from running preset scenarios using center layout component
+    if (!currentUser) {
+        showAlertPopup("Please log in or create an account to load pre-configured industrial workloads.", false);
+        selector.value = "custom"; 
+        return;
+    }
 
     const s = scenarios[val];
     processes = JSON.parse(JSON.stringify(s.data));
@@ -117,6 +156,38 @@ document.getElementById("add-row").addEventListener("click", () => {
     });
     renderTable();
 });
+
+// ====================== STATE RESET SYSTEM ENGINE ======================
+function resetSimulatorEngine() {
+    processes = [
+        { id: 'P1', arrival: 0, burst: 5, priority: 1 }
+    ];
+    
+    document.getElementById("scenario-select").value = "custom";
+    document.getElementById("algo-select").value = "fcfs";
+    document.getElementById("quantum").value = "2";
+    
+    toggleRR();
+    
+    document.getElementById("active-algo").innerText = "";
+    document.getElementById("ai-text-content").innerHTML = `
+        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 8px;">
+            Select a scenario or execute to see which algorithm is best for this workload.
+        </p>
+    `;
+    
+    if (myChart) {
+        myChart.destroy();
+        myChart = null;
+    }
+    
+    document.getElementById("gantt-display").innerHTML = `
+        <p style="margin: auto; color: var(--text-dim); font-style: italic;">Ready for execution...</p>
+    `;
+    
+    renderTable();
+}
+window.resetSimulatorEngine = resetSimulatorEngine;
 
 // ====================== MATHEMATICAL SCHEDULING SOLVER ======================
 function solve(algo, q = 2) {
@@ -190,7 +261,6 @@ function solve(algo, q = 2) {
 function updateAIRecommendation(selectedAlgo, results) {
     const algos = ["FCFS", "SJF", "Priority", "RR"];
     
-    // Find the mathematically best algorithm (lowest waiting time)
     let bestIndex = 0;
     let minWT = results[0];
     for (let i = 1; i < results.length; i++) {
@@ -201,7 +271,6 @@ function updateAIRecommendation(selectedAlgo, results) {
     }
     const mathematicallyBest = algos[bestIndex];
     
-    // Evaluate operational properties of current workload queue
     const bursts = processes.map(p => p.burst);
     const maxBurst = Math.max(...bursts);
     const minBurst = Math.min(...bursts);
@@ -219,7 +288,6 @@ function updateAIRecommendation(selectedAlgo, results) {
         analysisText = `⏳ <strong>FCFS execution</strong> is viable here because your queue contains steady, uniform execution bursts, limiting potential performance degradations.`;
     }
 
-    // Generate diagnostic callout notes based on current selections
     let critiqueText = "";
     if (selectedAlgo === "fcfs" && hasHighVariance) {
         critiqueText = `<p style="margin-top: 10px; color: #f43f5e; font-size: 0.8rem;">⚠️ <strong>Convoy Effect Detected:</strong> Using FCFS with long tasks mixed alongside short tasks forces quick processes to stall behind long ones, driving up your average waiting time.</p>`;
@@ -272,7 +340,6 @@ document.getElementById("run-btn").addEventListener("click", async () => {
     document.getElementById("active-algo").innerText = `[ Current: ${algo.toUpperCase()} ]`;
     const current = solve(algo, q);
 
-    // Call our newly added AI Engine to update the Recommendation box dynamically!
     updateAIRecommendation(algo, results);
 
     await animateGantt(current.gantt);
@@ -428,7 +495,7 @@ function resetAuthUI() {
 
 async function registerUser(fullname, email, password) {
     if (!fullname.trim()) {
-        alert("Please fill out the Full Name field.");
+        showAlertPopup("Please fill out the Full Name field.", false);
         return;
     }
 
@@ -445,23 +512,23 @@ async function registerUser(fullname, email, password) {
 
     if (error) {
         if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("exists")) {
-            alert("Account already exists with this email address.");
+            showAlertPopup("Account already exists with this email address.", false);
         } else {
-            alert(error.message);
+            showAlertPopup(error.message, false);
         }
     } else {
         if (data.user && data.user.identities && data.user.identities.length === 0) {
-            alert("Account already exists with this email address.");
+            showAlertPopup("Account already exists with this email address.", false);
             return;
         }
 
         if (data.user && data.session) {
-            alert("Account Created Successfully!");
+            showAlertPopup("Account Created Successfully!", true);
             document.getElementById("signup-modal").style.display = "none";
             currentUser = data.user;
             updateUI(fullname, email);
         } else {
-            alert("Registration successful! Please check your email inbox for confirmation.");
+            showAlertPopup("Registration successful! Please check your email inbox for confirmation.", true);
             document.getElementById("signup-modal").style.display = "none";
         }
     }
@@ -471,7 +538,7 @@ async function loginUser(email, password) {
     const { data, error } = await client.auth.signInWithPassword({ email: email, password: password });
 
     if (error) {
-        alert(error.message);
+        showAlertPopup(error.message, false);
     } else {
         currentUser = data.user;
         
@@ -487,10 +554,11 @@ async function loginUser(email, password) {
 async function logoutUser() {
     const { error } = await client.auth.signOut();
     if (error) {
-        alert(error.message);
+        showAlertPopup(error.message, false);
     } else {
         currentUser = null;
         resetAuthUI();
+        resetSimulatorEngine();
     }
 }
 window.logoutUser = logoutUser;

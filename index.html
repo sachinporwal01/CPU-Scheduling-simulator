@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> AI Powered CPU Scheduling Simulator</title>
+    <title>CPU Scheduler Pro | Logical Forge</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,16 +11,19 @@
 <body>
 
 <div class="container">
+    <!-- Top Right Auth Utility -->
     <div class="auth-container" id="auth-zone">
         <button class="btn-login" onclick="openModal('login-modal')">Log In</button>
         <button class="btn-signup" onclick="openModal('signup-modal')">Sign Up</button>
     </div>
 
+    <!-- Header Section -->
     <div class="header-block">
         <h1 style="margin:0; color: var(--accent); letter-spacing: -1px;">
             CPU Scheduler <span style="font-weight:300; color: white;">AI Simulator</span>
         </h1>
 
+        <!-- Configuration Inputs Toolbar Grid -->
         <div class="controls-toolbar">
             <div class="input-group">
                 <label>Scenario Mode</label>
@@ -48,13 +51,16 @@
             </div>
         </div>
 
+        <!-- System Actions Trigger Row -->
         <div class="action-row">
             <button class="btn-add" id="add-row">Add Process +</button>
             <button class="btn-run" id="run-btn">Execute Simulation</button>
+            <button class="btn-reset" id="reset-btn" onclick="resetSimulatorEngine()">Reset Engine</button>
             <button class="btn-history" id="history-tab-btn" onclick="toggleHistoryView()" style="display: none;">View History</button>
         </div>
     </div>
 
+    <!-- Dashboard Central Hub Layout -->
     <div class="main-grid">
         <div class="glass">
             <h3 style="margin-top:0">Process Queue</h3>
@@ -90,6 +96,7 @@
         </div>
     </div>
 
+    <!-- Live Execution Tracking Output Visuals -->
     <div class="glass">
         <h3 style="margin-top:0">
             Live Gantt Chart 
@@ -100,9 +107,11 @@
         </div>
     </div>
 
+    <!-- Persistent Database Telemetry Stream History -->
     <div id="history-section" class="glass" style="display: none;"></div>
 </div>
 
+<!-- Authentication Modals Setup -->
 <div id="login-modal" class="modal-overlay" onclick="closeModal(event, 'login-modal')">
     <div class="modal-content glass">
         <span class="modal-close" onclick="document.getElementById('login-modal').style.display='none'">&times;</span>
@@ -145,5 +154,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="script.js"></script>
+<div id="custom-alert-modal" class="modal-overlay" onclick="closeCustomAlert(event)">
+    <div class="modal-content glass text-center" style="max-width: 360px; padding: 30px; border-color: rgba(244, 63, 94, 0.25);">
+        <div id="alert-icon-zone" style="font-size: 2.5rem; margin-bottom: 12px;">⚠️</div>
+        <h3 id="alert-title-zone" style="margin: 0 0 10px 0; color: #f43f5e; font-weight: 600;">System Notification</h3>
+        <p id="alert-message-zone" style="color: var(--text); font-size: 0.9rem; line-height: 1.5; margin: 0 0 20px 0;"></p>
+        <button onclick="document.getElementById('custom-alert-modal').style.display='none'" class="btn-run" style="width: 100%; background: #f43f5e; color: white;">Continue</button>
+    </div>
+</div>
 </body>
 </html>
