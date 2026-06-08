@@ -137,12 +137,39 @@ td input[type="number"] { width: 65px; }
 .modal-input-group { display: flex; flex-direction: column; gap: 8px; }
 .modal-input-group input { width: 100%; box-sizing: border-box; }
 
+/* Custom Password Input relative inline positioning layout setups */
+.pwd-wrapper {
+    position: relative;
+    display: flex;
+    width: 100%;
+}
+.pwd-wrapper input {
+    width: 100%;
+    padding-right: 40px; /* Leave space so text doesn't flow behind the eye symbol */
+    box-sizing: border-box;
+}
+.pwd-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    font-size: 1.1rem;
+    z-index: 5;
+    transition: transform 0.1s ease;
+}
+.pwd-toggle:active {
+    transform: translateY(-50%) scale(0.85);
+}
+
+/* Custom Center Formatting Utilities */
+.text-center {
+    text-align: center;
+}
+
 /* Responsive Grid Adapters */
 @media (max-width: 992px) {
     .main-grid { grid-template-columns: 1fr; }
     .header-block { padding-right: 0; margin-top: 60px; }
-}
-/* Custom Center Formatting Utilities */
-.text-center {
-    text-align: center;
 }

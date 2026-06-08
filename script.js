@@ -43,6 +43,21 @@ const scenarios = {
     }
 };
 
+// ====================== PASSWORD VISIBILITY TOGGLE ======================
+function togglePasswordVisibility(inputId, toggleIcon) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    if (input.type === "password") {
+        input.type = "text";
+        toggleIcon.innerText = "🙈";
+    } else {
+        input.type = "password";
+        toggleIcon.innerText = "👁️";
+    }
+}
+window.togglePasswordVisibility = togglePasswordVisibility;
+
 // ====================== CUSTOM CENTERED POPUP ENGINE ======================
 function showAlertPopup(message, isSuccess = false) {
     const modal = document.getElementById("custom-alert-modal");
@@ -90,7 +105,6 @@ function loadScenario() {
     const val = selector.value;
     if (val === "custom") return;
 
-    // AUTH GATEWAY: Blocks guest profiles from running preset scenarios using center layout component
     if (!currentUser) {
         showAlertPopup("Please log in or create an account to load pre-configured industrial workloads.", false);
         selector.value = "custom"; 
@@ -576,6 +590,65 @@ async function checkUser() {
     }
 }
 
+// ====================== PASSWORD RESET MANAGEMENT FLOW ======================
+async function openForgotPasswordFlow() {
+    const emailField = document.getElementById("email").value;
+    
+    if (!emailField.trim()) {
+        showAlertPopup("Please type your email address into the Login input box first, then click 'Forgot Password?'.", false);
+        return;
+    }
+
+    document.getElementById("login-modal").style.display = "none";
+
+    const { data, error } = await client.auth.resetPasswordForEmail(emailField, {
+        redirectTo: window.location.origin, 
+    });
+
+    if (error) {
+        showAlertPopup(error.message, false);
+    } else {
+        showAlertPopup("Password recovery link transmitted successfully! Please audit your email inbox logs.", true);
+    }
+}
+window.openForgotPasswordFlow = openForgotPasswordFlow;
+
+async function catchInboundResetToken() {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get("type");
+
+    if (type === "recovery" || window.location.href.includes("type=recovery")) {
+        document.getElementById("reset-password-modal").style.display = "flex";
+    }
+}
+
+async function executePasswordUpdate() {
+    const newPassword = document.getElementById("new-password-input").value;
+
+    if (!newPassword || newPassword.length < 6) {
+        showAlertPopup("Password length requirements error: Values must extend past 6 distinct character points minimum.", false);
+        return;
+    }
+
+    const { data, error } = await client.auth.updateUser({
+        password: newPassword
+    });
+
+    if (error) {
+        showAlertPopup(error.message, false);
+    } else {
+        document.getElementById("reset-password-modal").style.display = "none";
+        document.getElementById("new-password-input").value = "";
+        
+        showAlertPopup("Your system password parameters have been updated perfectly! You are now logged into your session workspace profile.", true);
+        
+        if (data.user) {
+            currentUser = data.user;
+            updateUI(data.user.user_metadata?.fullname || "", data.user.email);
+        }
+    }
+}
+
 // Initialize Active Environment Engine Hooks
 document.getElementById("signupBtn").addEventListener("click", () => {
     registerUser(
@@ -589,6 +662,9 @@ document.getElementById("loginBtn").addEventListener("click", () => {
     loginUser(document.getElementById("email").value, document.getElementById("password").value);
 });
 
+document.getElementById("updatePasswordBtn").addEventListener("click", executePasswordUpdate);
+
 // Seed Table Runtime Layout Execution
 checkUser();
 renderTable();
+catchInboundResetToken();

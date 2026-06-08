@@ -11,19 +11,16 @@
 <body>
 
 <div class="container">
-    <!-- Top Right Auth Utility -->
     <div class="auth-container" id="auth-zone">
         <button class="btn-login" onclick="openModal('login-modal')">Log In</button>
         <button class="btn-signup" onclick="openModal('signup-modal')">Sign Up</button>
     </div>
 
-    <!-- Header Section -->
     <div class="header-block">
         <h1 style="margin:0; color: var(--accent); letter-spacing: -1px;">
             CPU Scheduler <span style="font-weight:300; color: white;">AI Simulator</span>
         </h1>
 
-        <!-- Configuration Inputs Toolbar Grid -->
         <div class="controls-toolbar">
             <div class="input-group">
                 <label>Scenario Mode</label>
@@ -51,7 +48,6 @@
             </div>
         </div>
 
-        <!-- System Actions Trigger Row -->
         <div class="action-row">
             <button class="btn-add" id="add-row">Add Process +</button>
             <button class="btn-run" id="run-btn">Execute Simulation</button>
@@ -60,7 +56,6 @@
         </div>
     </div>
 
-    <!-- Dashboard Central Hub Layout -->
     <div class="main-grid">
         <div class="glass">
             <h3 style="margin-top:0">Process Queue</h3>
@@ -96,7 +91,6 @@
         </div>
     </div>
 
-    <!-- Live Execution Tracking Output Visuals -->
     <div class="glass">
         <h3 style="margin-top:0">
             Live Gantt Chart 
@@ -107,11 +101,9 @@
         </div>
     </div>
 
-    <!-- Persistent Database Telemetry Stream History -->
     <div id="history-section" class="glass" style="display: none;"></div>
 </div>
 
-<!-- Authentication Modals Setup -->
 <div id="login-modal" class="modal-overlay" onclick="closeModal(event, 'login-modal')">
     <div class="modal-content glass">
         <span class="modal-close" onclick="document.getElementById('login-modal').style.display='none'">&times;</span>
@@ -123,7 +115,11 @@
             </div>
             <div class="modal-input-group" style="margin-top: 15px;">
                 <label>Password</label>
-                <input type="password" id="password" placeholder="••••••••" required>
+                <div class="pwd-wrapper">
+                    <input type="password" id="password" placeholder="••••••••" required>
+                    <span class="pwd-toggle" onclick="togglePasswordVisibility('password', this)">👁️</span>
+                </div>
+                <a href="#" onclick="openForgotPasswordFlow()" style="color: var(--accent); font-size: 0.75rem; margin-top: 5px; display: inline-block; text-decoration: none;">Forgot Password?</a>
             </div>
             <button type="button" id="loginBtn" class="btn-run" style="width: 100%; margin-top: 20px; padding: 12px;">Sign In</button>
         </form>
@@ -145,15 +141,33 @@
             </div>
             <div class="modal-input-group" style="margin-top: 15px;">
                 <label>Password</label>
-                <input type="password" id="signupPassword" placeholder="••••••••" required>
+                <div class="pwd-wrapper">
+                    <input type="password" id="signupPassword" placeholder="••••••••" required>
+                    <span class="pwd-toggle" onclick="togglePasswordVisibility('signupPassword', this)">👁️</span>
+                </div>
             </div>
             <button type="button" id="signupBtn" class="btn-signup" style="width: 100%; margin-top: 20px; padding: 12px; font-weight: 600;">Register</button>
         </form>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="script.js"></script>
+<div id="reset-password-modal" class="modal-overlay">
+    <div class="modal-content glass" style="max-width: 400px; background: rgba(30, 41, 59, 0.95);">
+        <h2 style="color: var(--accent); margin-top: 0;">Update Password</h2>
+        <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 15px;">Type in your new secure authentication password below.</p>
+        <form onsubmit="event.preventDefault();">
+            <div class="modal-input-group">
+                <label>New Password</label>
+                <div class="pwd-wrapper">
+                    <input type="password" id="new-password-input" placeholder="••••••••" required>
+                    <span class="pwd-toggle" onclick="togglePasswordVisibility('new-password-input', this)">👁️</span>
+                </div>
+            </div>
+            <button type="button" id="updatePasswordBtn" class="btn-run" style="width: 100%; margin-top: 20px; padding: 12px;">Update Password</button>
+        </form>
+    </div>
+</div>
+
 <div id="custom-alert-modal" class="modal-overlay" onclick="closeCustomAlert(event)">
     <div class="modal-content glass text-center" style="max-width: 360px; padding: 30px; border-color: rgba(244, 63, 94, 0.25);">
         <div id="alert-icon-zone" style="font-size: 2.5rem; margin-bottom: 12px;">⚠️</div>
@@ -162,5 +176,8 @@
         <button onclick="document.getElementById('custom-alert-modal').style.display='none'" class="btn-run" style="width: 100%; background: #f43f5e; color: white;">Continue</button>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="script.js"></script>
 </body>
 </html>
